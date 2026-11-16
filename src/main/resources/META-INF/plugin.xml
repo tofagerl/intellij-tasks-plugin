@@ -1,0 +1,10 @@
+<idea-plugin>
+    <id>io.github.tofagerl.tasks</id>
+    <name>Tasks</name>
+    <vendor url="https://github.com/tofagerl">tofagerl</vendor>
+    <description>Tool window listing planned tasks from tmp/tasks/*.md, one section per session, grouped by owner.</description>
+    <depends>com.intellij.modules.platform</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Tasks" anchor="right" factoryClass="io.github.tofagerl.tasks.TasksToolWindowFactory"/>
+    </extensions>
+</idea-plugin>

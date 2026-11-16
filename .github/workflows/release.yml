@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and test
+        run: ./gradlew buildPlugin test "-PpluginVersion=${GITHUB_REF_NAME#v}"
+      - name: Generate updatePlugins.xml
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          ZIP=$(basename build/distributions/*.zip)
+          cat > updatePlugins.xml <<EOF
+          <plugins>
+            <plugin id="io.github.tofagerl.tasks" url="https://github.com/tofagerl/intellij-tasks-plugin/releases/download/${GITHUB_REF_NAME}/${ZIP}" version="${VERSION}">
+              <idea-version since-build="263"/>
+              <name>Tasks</name>
+              <vendor>tofagerl</vendor>
+            </plugin>
+          </plugins>
+          EOF
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" build/distributions/*.zip updatePlugins.xml --title "$GITHUB_REF_NAME" --generate-notes
