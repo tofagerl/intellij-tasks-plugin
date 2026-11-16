@@ -8,6 +8,9 @@ object TaskFile {
     fun parse(content: String): List<TaskItem> =
         content.lines().mapNotNull { line -> match(line)?.toItem() }
 
+    fun title(content: String): String? =
+        content.lines().firstOrNull { it.startsWith("# ") }?.removePrefix("# ")?.trim()
+
     fun toggle(content: String, item: TaskItem): String? {
         // Split keeping each line's terminator so CRLF and a missing final newline survive.
         val parts = Regex("[^\n]*\n|[^\n]+").findAll(content).map { it.value }.toMutableList()

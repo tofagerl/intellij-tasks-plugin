@@ -63,4 +63,10 @@ class TaskFileTest {
         assertNull(TaskFile.toggle("- [x] (tom) A\n", TaskItem("tom", "A", false)))
         assertNull(TaskFile.toggle("- [ ] (tom) B\n", TaskItem("tom", "A", false)))
     }
+
+    @Test
+    fun `title is the first level-one heading`() {
+        assertEquals("quest-823 review", TaskFile.title("- [ ] (tom) A\n# quest-823 review \n# later\n"))
+        assertNull(TaskFile.title("- [ ] (tom) A\n## not level one\n#nospace\n"))
+    }
 }

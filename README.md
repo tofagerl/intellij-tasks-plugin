@@ -1,14 +1,15 @@
 # Tasks (IntelliJ plugin)
 
-A right-side "Tasks" tool window that renders every `<project>/tmp/tasks/*.md` as one section per file. The file name (without `.md`) is the session name.
+A right-side "Tasks" tool window that renders every `<project>/tmp/tasks/<session>/tasks.md` as one section per session folder. The section title is the file's first `# ` heading, or the first 8 characters of the folder name.
 
 ## Task format
 
 ```
-tmp/tasks/<session>.md
+tmp/tasks/<session>/tasks.md
 ```
 
 ```
+# Section title
 - [ ] (owner) text
 - [x] (owner) text
 ```

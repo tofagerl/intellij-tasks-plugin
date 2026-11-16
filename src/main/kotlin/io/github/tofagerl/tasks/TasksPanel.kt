@@ -64,22 +64,24 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
 
     fun refresh() {
         content.removeAll()
-        val sessions = ReadAction.compute<List<Pair<VirtualFile, List<TaskItem>>>, Throwable> {
+        val sessions = ReadAction.compute<List<Session>, Throwable> {
             taskFiles().mapNotNull { vf ->
-                FileDocumentManager.getInstance().getDocument(vf)?.let { vf to TaskFile.parse(it.text) }
+                FileDocumentManager.getInstance().getDocument(vf)?.text?.let {
+                    Session(vf, TaskFile.title(it) ?: vf.parent.name.take(8), TaskFile.parse(it))
+                }
             }
         }
             // Sessions with open tasks first, newest first; fully done sessions sink to the bottom.
-            .sortedWith(compareBy<Pair<VirtualFile, List<TaskItem>>> { (_, items) -> items.all { it.done } }
-                .thenByDescending { (vf, _) -> vf.timeStamp })
+            .sortedWith(compareBy<Session> { s -> s.items.all { it.done } }.thenByDescending { it.file.timeStamp })
         if (sessions.isEmpty()) content.add(JBLabel("No tasks in tmp/tasks/"))
-        sessions.forEach { (vf, items) -> addSession(vf, items) }
+        sessions.forEach { addSession(it) }
         content.revalidate()
         content.repaint()
     }
 
-    private fun addSession(vf: VirtualFile, items: List<TaskItem>) {
-        content.add(JBLabel(vf.nameWithoutExtension).apply {
+    private fun addSession(session: Session) {
+        val (vf, title, items) = session
+        content.add(JBLabel(title).apply {
             font = font.deriveFont(Font.BOLD, font.size2D + 1)
             border = JBUI.Borders.empty(12, 0, 2, 0)
         })
@@ -111,11 +113,14 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
         refresh()
     }
 
-    // Caller must hold a read action.
+    // One folder per session: tmp/tasks/<session-id>/tasks.md. Caller must hold a read action.
     private fun taskFiles(): List<VirtualFile> =
         LocalFileSystem.getInstance().findFileByPath(dirPath)?.children
-            ?.filter { !it.isDirectory && it.extension == "md" }
+            ?.filter { it.isDirectory }
+            ?.mapNotNull { it.findChild(TASKS_FILE) }
             .orEmpty()
+
+    private data class Session(val file: VirtualFile, val title: String, val items: List<TaskItem>)
 
     private fun isTaskPath(path: String) = path == dirPath || path.startsWith("$dirPath/")
 
@@ -124,6 +129,7 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
 
     companion object {
         private const val OWNER_TOM = "tom"
+        private const val TASKS_FILE = "tasks.md"
         private const val POLL_MS = 2000L
     }
 }
