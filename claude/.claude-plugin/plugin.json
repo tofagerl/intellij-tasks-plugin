@@ -1,0 +1,17 @@
+{
+  "name": "tasks",
+  "displayName": "Tasks",
+  "version": "0.4.0",
+  "description": "Per-session task list shown in the IntelliJ Tasks tool window; the user's ticks wake Claude.",
+  "author": { "name": "tofagerl", "url": "https://github.com/tofagerl" },
+  "repository": "https://github.com/tofagerl/intellij-tasks-plugin",
+  "license": "MIT",
+  "userConfig": {
+    "tasks_dir": {
+      "type": "string",
+      "title": "Tasks directory",
+      "description": "Where session task files go. Relative paths resolve against the repo's main worktree. Must match the IntelliJ plugin's setting.",
+      "default": "tmp/tasks"
+    }
+  }
+}

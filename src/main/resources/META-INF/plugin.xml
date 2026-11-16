@@ -6,5 +6,7 @@
     <depends>com.intellij.modules.platform</depends>
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Tasks" anchor="right" factoryClass="io.github.tofagerl.tasks.TasksToolWindowFactory"/>
+        <applicationConfigurable parentId="tools" id="io.github.tofagerl.tasks" displayName="Tasks"
+                                 instance="io.github.tofagerl.tasks.TasksConfigurable"/>
     </extensions>
 </idea-plugin>

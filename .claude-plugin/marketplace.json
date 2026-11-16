@@ -1,0 +1,14 @@
+{
+  "name": "tofagerl",
+  "owner": {
+    "name": "tofagerl"
+  },
+  "description": "tofagerl's Claude Code plugins",
+  "plugins": [
+    {
+      "name": "tasks",
+      "source": "./claude",
+      "description": "Per-session task list shown in the IntelliJ Tasks tool window; the user's ticks wake Claude."
+    }
+  ]
+}

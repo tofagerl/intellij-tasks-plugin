@@ -31,7 +31,9 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         border = JBUI.Borders.empty(8)
     }
-    private val dirPath = "${project.basePath}/tmp/tasks"
+    private val dirPath get() = TasksSettings.getInstance().resolve(project.basePath)
+    @Volatile
+    private var renderedDir = ""
     private val doneTracker = DoneTracker(HIDE_DONE_AFTER_MS)
 
     init {
@@ -58,7 +60,7 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
         val poller = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(
             {
                 LocalFileSystem.getInstance().refreshAndFindFileByPath(dirPath)?.refresh(false, true)
-                if (System.currentTimeMillis() >= doneTracker.nextExpiry) scheduleRefresh()
+                if (System.currentTimeMillis() >= doneTracker.nextExpiry || dirPath != renderedDir) scheduleRefresh()
             },
             POLL_MS, POLL_MS, TimeUnit.MILLISECONDS,
         )
@@ -68,6 +70,7 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
 
     fun refresh() {
         content.removeAll()
+        renderedDir = dirPath
         doneTracker.startRender()
         val now = System.currentTimeMillis()
         val sessions = ReadAction.compute<List<Session>, Throwable> {
@@ -81,7 +84,7 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
             .filter { it.items.isNotEmpty() }
             // Sessions with open tasks first, newest first; fully done sessions sink to the bottom.
             .sortedWith(compareBy<Session> { s -> s.items.all { it.done } }.thenByDescending { it.file.timeStamp })
-        if (sessions.isEmpty()) content.add(JBLabel("No open tasks in tmp/tasks/"))
+        if (sessions.isEmpty()) content.add(JBLabel("No open tasks in $renderedDir"))
         sessions.forEach { addSession(it) }
         content.revalidate()
         content.repaint()
@@ -123,7 +126,7 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
 
     // One folder per session: tmp/tasks/<session-id>/tasks.md. Caller must hold a read action.
     private fun taskFiles(): List<VirtualFile> =
-        LocalFileSystem.getInstance().findFileByPath(dirPath)?.children
+        LocalFileSystem.getInstance().findFileByPath(renderedDir)?.children
             ?.filter { it.isDirectory }
             ?.mapNotNull { it.findChild(TASKS_FILE) }
             .orEmpty()
