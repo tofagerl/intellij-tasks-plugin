@@ -14,7 +14,7 @@ tmp/tasks/<session>/tasks.md
 - [x] (owner) text
 ```
 
-Only tasks owned by `tom` are clickable (toggle). The owner is currently hardcoded.
+Only tasks owned by `tom` are clickable (toggle). The owner is currently hardcoded. Done tasks disappear 5 minutes after they were ticked (the file keeps them), and sessions with nothing left open disappear with them.
 
 ## Install
 

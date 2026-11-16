@@ -32,6 +32,7 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
         border = JBUI.Borders.empty(8)
     }
     private val dirPath = "${project.basePath}/tmp/tasks"
+    private val doneTracker = DoneTracker(HIDE_DONE_AFTER_MS)
 
     init {
         add(JBScrollPane(content), BorderLayout.CENTER)
@@ -55,7 +56,10 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
         )
         // shortcut: polls for external writes every 2s, replace with a native file watcher root if it shows up in profiling
         val poller = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(
-            { LocalFileSystem.getInstance().refreshAndFindFileByPath(dirPath)?.refresh(false, true) },
+            {
+                LocalFileSystem.getInstance().refreshAndFindFileByPath(dirPath)?.refresh(false, true)
+                if (System.currentTimeMillis() >= doneTracker.nextExpiry) scheduleRefresh()
+            },
             POLL_MS, POLL_MS, TimeUnit.MILLISECONDS,
         )
         Disposer.register(parent) { poller.cancel(false) }
@@ -64,16 +68,20 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
 
     fun refresh() {
         content.removeAll()
+        doneTracker.startRender()
+        val now = System.currentTimeMillis()
         val sessions = ReadAction.compute<List<Session>, Throwable> {
             taskFiles().mapNotNull { vf ->
                 FileDocumentManager.getInstance().getDocument(vf)?.text?.let {
-                    Session(vf, TaskFile.title(it) ?: vf.parent.name.take(8), TaskFile.parse(it))
+                    val items = doneTracker.visible(vf.path, vf.timeStamp, TaskFile.parse(it), now)
+                    Session(vf, TaskFile.title(it) ?: vf.parent.name.take(8), items)
                 }
             }
         }
+            .filter { it.items.isNotEmpty() }
             // Sessions with open tasks first, newest first; fully done sessions sink to the bottom.
             .sortedWith(compareBy<Session> { s -> s.items.all { it.done } }.thenByDescending { it.file.timeStamp })
-        if (sessions.isEmpty()) content.add(JBLabel("No tasks in tmp/tasks/"))
+        if (sessions.isEmpty()) content.add(JBLabel("No open tasks in tmp/tasks/"))
         sessions.forEach { addSession(it) }
         content.revalidate()
         content.repaint()
@@ -131,5 +139,6 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
         private const val OWNER_TOM = "tom"
         private const val TASKS_FILE = "tasks.md"
         private const val POLL_MS = 2000L
+        private const val HIDE_DONE_AFTER_MS = 5 * 60 * 1000L
     }
 }
