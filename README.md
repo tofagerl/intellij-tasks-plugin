@@ -14,7 +14,7 @@ tmp/tasks/<session>/tasks.md
 - [x] (owner) text
 ```
 
-Only tasks owned by `tom` are clickable (toggle). The owner is currently hardcoded. Done tasks disappear 5 minutes after they were ticked (the file keeps them), and sessions with nothing left open disappear with them.
+Only tasks owned by `user` are clickable (toggle). Done tasks disappear 5 minutes after they were ticked (the file keeps them), and sessions with nothing left open disappear with them.
 
 The directory is configurable: IntelliJ under Settings → Tools → Tasks, Claude Code through the plugin's `tasks_dir` option (`/config`). Relative paths resolve against the project root (IntelliJ) and the repo's main worktree (Claude Code), and both settings must point at the same place.
 

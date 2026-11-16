@@ -27,7 +27,7 @@ dir="$base/$session"
 mkdir -p "$dir"
 file="$dir/tasks.md"
 # Snapshot of the user's ticks, so file-changed.sh reports only new changes.
-rg -N '^- \[[xX]\] \(tom\)' "$file" 2>/dev/null | sort > "$dir/.ticked"
+rg -N '^- \[[xX]\] \(user\)' "$file" 2>/dev/null | sort > "$dir/.ticked"
 
 rules=$(cat "$(dirname "$0")/../rules.md")
 jq -n --arg f "$file" --arg rules "$rules" '{

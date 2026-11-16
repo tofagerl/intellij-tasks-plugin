@@ -97,16 +97,16 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
             border = JBUI.Borders.empty(12, 0, 2, 0)
         })
         items.groupBy { it.owner }
-            .toSortedMap(compareBy<String> { it != OWNER_TOM }.thenBy { it })
+            .toSortedMap(compareBy<String> { it != OWNER_USER }.thenBy { it })
             .forEach { (owner, ownerItems) ->
-                content.add(JBLabel(owner).apply {
+                content.add(JBLabel(owner.replaceFirstChar { it.uppercase() }).apply {
                     font = font.deriveFont(Font.BOLD)
                     border = JBUI.Borders.empty(4, 8, 2, 0)
                 })
                 ownerItems.forEach { item ->
                     content.add(JBCheckBox(item.text, item.done).apply {
                         border = JBUI.Borders.emptyLeft(8)
-                        isEnabled = owner == OWNER_TOM
+                        isEnabled = owner == OWNER_USER
                         addActionListener { toggle(vf, item) }
                     })
                 }
@@ -139,7 +139,7 @@ class TasksPanel(private val project: Project, parent: Disposable) : JPanel(Bord
         ApplicationManager.getApplication().invokeLater({ refresh() }, project.disposed)
 
     companion object {
-        private const val OWNER_TOM = "tom"
+        private const val OWNER_USER = "user"
         private const val TASKS_FILE = "tasks.md"
         private const val POLL_MS = 2000L
         private const val HIDE_DONE_AFTER_MS = 5 * 60 * 1000L
